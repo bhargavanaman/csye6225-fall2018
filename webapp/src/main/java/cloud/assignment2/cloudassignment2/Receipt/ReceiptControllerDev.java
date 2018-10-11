@@ -190,6 +190,58 @@ public class ReceiptControllerDev {
         return null;
     }
     //DELETE RECEIPT END
+	
+
+
+
+
+    //GET RECEIPT START
+    @RequestMapping(value="/transaction/{id}/attachments", method=RequestMethod.GET)
+    public List<ReceiptPojo> getReceipt(@PathVariable(value="id") String transactionId, HttpServletRequest req, HttpServletResponse res){
+
+        JsonObject json = new JsonObject();
+        System.out.println("DEV Environment");
+        String authHeader = req.getHeader("Authorization");
+
+        if (authHeader==null){
+            List<ReceiptPojo> newpojo1 = new ArrayList<ReceiptPojo>();
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return newpojo1;
+        }
+
+        else {
+            int result = userDao.authUserCheck(authHeader);
+            if(result>0){
+                List<ExpensePojo> expensePojoRecord = expenseRepository.findAllById(transactionId);
+
+                if(expensePojoRecord.size()>0){
+                    ExpensePojo expenseRecord = expensePojoRecord.get(0);
+                    if(Integer.parseInt(expenseRecord.getUserId()) == result){
+                        res.setStatus(HttpServletResponse.SC_OK);
+                        return receiptRepository.findByTransactionId(transactionId);
+                    }
+                    else{
+                        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        List<ReceiptPojo> newpojo1 = new ArrayList<ReceiptPojo>();
+                        return newpojo1;
+                    }
+                }
+                else{
+                    res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    List<ReceiptPojo> newpojo1 = new ArrayList<ReceiptPojo>();
+                    return newpojo1;
+                }
+            }
+            else{
+                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                List<ReceiptPojo> newpojo1 = new ArrayList<ReceiptPojo>();
+                return newpojo1;
+            }
+
+        }
+    }
+    //GET RECEIPT END
+
 
     
 }
