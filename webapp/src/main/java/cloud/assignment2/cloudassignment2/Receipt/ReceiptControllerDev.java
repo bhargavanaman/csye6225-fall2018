@@ -121,6 +121,76 @@ public class ReceiptControllerDev {
         return json.toString();
 
     }
+
+     //DELETE RECEIPT START
+    //key = filename to delete
+    @RequestMapping(value="/transaction/{id}/attachments/{idAttachment}" , method = RequestMethod.DELETE)
+    public String deleteReceipt(@PathVariable(value="id") String transactionId,
+                              @PathVariable(value="idAttachment") String attachmentId,
+                              HttpServletRequest req, HttpServletResponse res){
+        String clientRegion = "us-east-1";
+        String bucketName = "csye6225-fall2018-chandwanid.me.csye6225.com";
+        String keyName = "csye6225-fall2018-assignment3";
+        String fileName;
+        //get file name wrt receiptId from receipt_pojo
+        JsonObject json = new JsonObject();
+
+        String header = req.getHeader("Authorization");
+        if(header != null) {
+            int result = userDao.authUserCheck(header);
+            if(result>0){
+                if(transactionId!="") {
+                    if (attachmentId != ""){
+                        List<ReceiptPojo> rpList = receiptRepository.findByReceiptid(attachmentId);
+                        ReceiptPojo rp = rpList.get(0);
+                        System.out.println("Receipt has tx id as" + rp.getTransactionId());
+                        fileName = rp.getUrl();
+                        if(rp.getTransactionId().equals(transactionId)){
+                            if(Integer.parseInt(rp.getUserId()) == result)
+                            {
+                                AmazonS3 s3client = AmazonS3ClientBuilder.standard()
+                                        .withRegion(clientRegion)
+                                        .withCredentials(new ProfileCredentialsProvider())
+                                        .build();
+                                s3client.deleteObject(bucketName, fileName);
+
+                                receiptRepository.delete(rp);
+                                res.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                                json.addProperty("message","Record deleted Successfully");
+                                return json.toString();
+                            }
+                            else{
+                                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                return json.toString();
+                            }
+                        }
+
+                    }
+                    else{
+                        json.addProperty("message", "Invalid attachment Id.");
+                        return json.toString();
+                    }
+                }
+                else{
+                    json.addProperty("message", "Invalid Expense Id.");
+                    return json.toString();
+                }
+            }
+            else{
+                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                json.addProperty("message","You are unauthorized");
+            }
+
+        }
+        else{
+            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            json.addProperty("message","You are unauthorized");
+        }
+
+        return null;
+    }
+    //DELETE RECEIPT END
+
     
 }
 
