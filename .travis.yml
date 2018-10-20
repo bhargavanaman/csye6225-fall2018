@@ -1,1 +1,16 @@
+language: java
+jdk:
+- oraclejdk8
 
+sudo: false
+install: true
+
+script:
+ - pwd
+ - cd webapp
+ - ./mvnw war
+ - cd build/libs
+ - ls -al
+ - cd ../../..
+ - pwd
+ - ls -al
