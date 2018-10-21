@@ -8,9 +8,11 @@ install: true
 script:
  - pwd
  - cd webapp
- - ./mvnw war
- - cd build/libs
+ - ./mvnw clean install
  - ls -al
  - cd ../../..
  - pwd
- - ls -al
+
+branches:
+ only:
+   - namanAssignment5
