@@ -7,6 +7,7 @@ install: true
 
 script:
  - pwd
+ - cd webapp
  - ./mvn clean install
  - ls -al
  - cd ../../..
