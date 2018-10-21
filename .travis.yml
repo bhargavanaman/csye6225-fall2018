@@ -7,7 +7,7 @@ install: true
 
 script:
  - pwd
- - ./mvnw clean install
+ - ./mvn clean install
  - ls -al
  - cd ../../..
  - pwd
