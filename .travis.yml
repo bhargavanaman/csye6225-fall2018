@@ -16,3 +16,20 @@ script:
 branches:
  only:
    - namanAssignment5
+after_success:
+  - pwd
+  - ls -al
+  - mkdir codedeploy_artifact
+  - cp infrastructure/aws/codedeploy/*.sh .
+  - cp infrastructure/aws/codedeploy/*.yml .
+  - zip -r csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip webapp/build/libs/ROOT.war *.sh *.yml
+  - ls -al
+  - mv csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip codedeploy_artifact/
+  - ls -al
+  - pwd
+  - cd codedeploy_artifact
+  - ls -al
+  - pwd
+  - cd ..
+  - pwd
+  - ls -al
