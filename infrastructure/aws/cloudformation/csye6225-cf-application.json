@@ -208,7 +208,28 @@
                                 "#systemctl start cloudwatch.service",
                                 "#systemctl enable cloudwatch.service",
                                 "systemctl enable tomcat.service",
-                                "systemctl start tomcat.service"
+                                "systemctl start tomcat.service",
+				"echo '#!/bin/sh' >> /usr/share/tomcat8/bin/setenv.sh \n",
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.profiles.active=dev\"' >> /usr/share/tomcat8/bin/setenv.sh\n"
+				},
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.url=jdbc:mysql://${DBInstance.Endpoint.Address}:3306/cloud\"' >> /usr/share/tomcat8/bin/setenv.sh\n"
+				},
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.username=${DBUser}\"' >> /usr/share/tomcat8/bin/setenv.sh\n"
+				},
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=${DBPassword}\"' >> /usr/share/tomcat8/bin/setenv.sh\n"
+				},
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dbucket.name=${DOMAIN}\"' >> /usr/share/tomcat8/bin/setenv.sh\n"
+				},
+				"chmod +x /usr/share/tomcat8/bin/setenv.sh\n",
+				"chmod 777 -R /tmp\n",
+				"chmod 777 /var/lib/tomcat8\n",
+				"chmod 777 /var/lib/tomcat8/webapps\n",
+				"sudo service tomcat8 restart \n"
                             ]
                         ]
                     }
