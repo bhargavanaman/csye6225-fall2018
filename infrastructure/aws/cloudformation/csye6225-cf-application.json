@@ -1,0 +1,323 @@
+{
+
+  "AWSTemplateFormatVersion": "2010-09-09",
+
+  "Resources": {
+
+    "DynamoDB": {
+
+      "Type": "AWS::DynamoDB::Table",
+
+      "Properties": {
+
+        "AttributeDefinitions": [
+
+          {
+
+            "AttributeName": "id",
+
+            "AttributeType": "N"
+
+          }
+
+        ],
+
+        "KeySchema": [
+
+          {
+
+            "AttributeName": "id",
+
+            "KeyType": "HASH"
+
+          }
+
+        ],
+
+        "ProvisionedThroughput": {
+
+          "ReadCapacityUnits": "5",
+
+          "WriteCapacityUnits": "5"
+
+        },
+
+        "TableName": "csye6225"
+
+      }
+
+    },
+
+    "DBSubnetGroup": {
+
+      "Type": "AWS::RDS::DBSubnetGroup",
+
+      "Properties": {
+
+        "DBSubnetGroupDescription": "My Subnet Group",
+
+        "SubnetIds": [
+
+          {
+
+            "Ref": "SUBNETID1"
+
+          },
+
+          {
+
+            "Ref": "SUBNETID2"
+
+          }
+
+        ]
+
+      }
+
+    },
+
+    "DBInstance": {
+
+      "Type": "AWS::RDS::DBInstance",
+
+      "Properties": {
+
+        "DBName": "cloud",
+
+        "Engine": "mysql",
+
+        "EngineVersion": "5.6.37",
+
+        "MultiAZ": "false",
+
+        "PubliclyAccessible": "false",
+
+        "StorageType": "gp2",
+
+        "MasterUsername": "root",
+
+        "DBInstanceClass": "db.t2.medium",
+
+        "DBInstanceIdentifier": "csye6225-spring2018",
+
+        "AllocatedStorage": "10",
+
+        "DBSubnetGroupName": {
+
+          "Ref": "DBSubnetGroup"
+
+        },
+
+        "MasterUserPassword": "masteruserpassword",
+
+        "VPCSecurityGroups": [{"Ref": "DBSGID"}]
+
+      }
+
+    },
+
+    "EC2Instance": {
+
+      "Type": "AWS::EC2::Instance",
+
+      "Properties": {
+
+        "ImageId": "ami-9887c6e7",
+
+        "InstanceType": "t2.micro",
+
+        "DisableApiTermination": true,
+
+        "AvailabilityZone": "us-east-1a",
+
+        "SubnetId": {
+
+          "Ref": "PUBLICSUBNETID"
+
+        },
+
+        "Volumes": [
+
+          {
+
+            "VolumeId": {
+
+              "Ref": "NewVolume"
+
+            },
+
+            "Device": "/dev/sdk"
+
+          }
+
+        ],
+
+        "KeyName": "csye6225-assignment6",
+
+        "SecurityGroupIds": [{"Ref": "SGID"}],
+
+        "UserData": {
+
+          "Fn::Base64": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/bin/bash -xe ",
+                                "yum install ruby ntp wget java-1.8.0-openjdk-devel -y",
+                                "systemctl start ntpd",
+                                "systemctl enable ntpd",
+                                "groupadd tomcat",
+                                "useradd -M -s /bin/nologin -g tomcat -d /opt/tomcat tomcat",
+                                "cd /tmp",
+                                "wget http://apache.mirrors.pair.com/tomcat/tomcat-8/v8.5.34/bin/apache-tomcat-8.5.34.tar.gz",
+                                "mkdir /opt/tomcat",
+                                "tar xvf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1",
+                                "cd /opt/tomcat",
+                                "chgrp -R tomcat /opt/tomcat",
+                                "chmod -R g+r conf",
+                                "chmod g+x conf",
+                                "chown -R tomcat webapps/ work/ temp/ logs/",
+                                "cd /usr/lib/systemd/system",
+                                "touch tomcat.service",
+                                "echo '[Unit]' > tomcat.service",
+                                "echo 'Description=Apache Tomcat Web Application Container' >> tomcat.service",
+                                "echo 'After=syslog.target network.target' >> tomcat.service",
+                                "echo '[Service]' >> tomcat.service",
+                                "echo 'Type=forking' >> tomcat.service",
+                                "echo 'Environment=JAVA_HOME=/usr/lib/jvm/jre' >> tomcat.service",
+                                "echo 'Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid' >> tomcat.service",
+                                "echo 'Environment=CATALINA_HOME=/opt/tomcat' >> tomcat.service",
+                                "echo 'Environment=CATALINA_BASE=/opt/tomcat' >> tomcat.service",
+                                "echo 'Environment=\"CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC\"' >> tomcat.service",
+                                "echo 'Environment=\"JAVA_OPTS=-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom\"' >> tomcat.service",
+                                "echo 'ExecStart=/opt/tomcat/bin/startup.sh' >> tomcat.service",
+                                "echo 'ExecStop=/bin/kill -15 $MAINPID' >> tomcat.service",
+                                "echo 'User=tomcat' >> tomcat.service",
+                                "echo 'Group=tomcat' >> tomcat.service",
+                                "echo 'UMask=0007' >> tomcat.service",
+                                "echo 'RestartSec=10' >> tomcat.service",
+                                "echo 'Restart=always' >> tomcat.service",
+                                "echo '[Install]' >> tomcat.service",
+                                "echo 'WantedBy=multi-user.target' >> tomcat.service",
+                                "systemctl daemon-reload",
+                                "#systemctl start cloudwatch.service",
+                                "#systemctl enable cloudwatch.service",
+                                "systemctl enable tomcat.service",
+                                "systemctl start tomcat.service"
+                            ]
+                        ]
+                    }
+
+        },
+
+        "IamInstanceProfile": "CodeDeployServiceRoleInstanceProfile",
+
+        "Tags": [
+
+          {
+
+            "Key": "Name",
+
+            "Value": "MyEC2Instance"
+
+          }
+
+        ]
+
+      }
+
+    },
+
+    "NewVolume": {
+
+      "Type": "AWS::EC2::Volume",
+
+      "Properties": {
+
+        "AvailabilityZone": "us-east-1a",
+
+        "Size": 20,
+
+        "VolumeType": "gp2"
+
+      }
+
+    },
+
+    "myBucket": {
+
+      "Type": "AWS::S3::Bucket",
+
+      "Properties": {
+
+        "BucketName": {
+
+          "Ref": "DOMAIN"
+
+        }
+
+      }
+
+    }
+
+  },
+
+  "Parameters": {
+
+    "PUBLICSUBNETID":{
+
+      "Type": "String"
+
+    },
+
+    "SGID": {
+
+      "Type": "String"
+
+    },
+
+    "DBSGID": {
+
+      "Type": "String"
+
+    },
+
+    "DBUser": {
+
+      "Type": "String"
+
+    },
+
+    "DBPassword": {
+
+      "Type": "String"
+
+    },
+
+    "SUBNETID1": {
+
+      "Description": "The subnet id",
+
+      "Type": "String"
+
+    },
+
+    "SUBNETID2": {
+
+      "Description": "The subnet id",
+
+      "Type": "String"
+
+    },
+
+    "DOMAIN": {
+
+      "Description": "The domain name",
+
+      "Type": "String"
+
+    }
+
+  }
+
+}

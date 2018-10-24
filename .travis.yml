@@ -8,6 +8,7 @@ install: true
 script:
  - pwd
  - cd webapp
+ - mvn install
  - mvn package
  - ls -al
  - cd ../../..
@@ -20,9 +21,9 @@ after_success:
   - pwd
   - ls -al
   - mkdir codedeploy_artifact
-  - cp infrastructure/aws/codedeploy/*.sh .
-  - cp infrastructure/aws/codedeploy/*.yml .
-  - zip -r csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip webapp/build/libs/ROOT.war *.sh *.yml
+  - cp bhargavanaman/csye6225-fall2018/infrastructure/aws/codedeploy/*.sh .
+  - cp bhargavanaman/csye6225-fall2018/infrastructure/aws/codedeploy/*.yml .
+  - zip -r csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip webapp/target/cloudassignment2-0.0.1-SNAPSHOT.war *.sh *.yml
   - ls -al
   - mv csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip codedeploy_artifact/
   - ls -al
@@ -33,3 +34,26 @@ after_success:
   - cd ..
   - pwd
   - ls -al
+deploy:
+  - provider: s3
+    local_dir: codedeploy_artifact
+    bucket: $S3_BUCKET
+    region: us-east-1
+    skip_cleanup: true
+    access_key_id: $ACCESS_KEY_ID
+    secret_access_key: $SECRET_ACCESS_KEY
+    on:
+      branch: namanAssignment5
+
+  - provider: codedeploy
+    access_key_id: $ACCESS_KEY_ID
+    bucket: $S3_BUCKET
+    key: csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip
+    bundle_type: zip
+    application: $APPLICATION
+    deployment_group: $DEPLOYMENT_GROUP
+    region: us-east-1
+    secret_access_key: $SECRET_ACCESS_KEY
+    wait-until-deployed: true
+    on:
+      branch: namanAssignment5
