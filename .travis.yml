@@ -23,8 +23,8 @@ after_success:
   - mkdir codedeploy_artifact
   - cp infrastructure/aws/codedeploy/*.sh . 
   - cp infrastructure/aws/codedeploy/*.yml .
-  - mv webapp/target/root-2.0.5.RELEASE.war webapp/target/root.war
-  - zip -r csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip webapp/target/root.war *.sh *.yml
+  - mv webapp/target/ROOT-2.0.5.RELEASE.war webapp/target/ROOT.war
+  - zip -r csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip webapp/target/ROOT.war *.sh *.yml
   - ls -al
   - mv csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip codedeploy_artifact/
   - ls -al
@@ -57,4 +57,4 @@ deploy:
     secret_access_key: $SECRET_ACCESS_KEY
     wait-until-deployed: true
     on:
-      branch: namanAssignment5
+      branch: namanAssignment5s
