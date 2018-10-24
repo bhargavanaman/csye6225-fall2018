@@ -11,7 +11,7 @@ script:
  - mvn install
  - mvn package
  - ls -al
- - cd ../../..
+ - cd ..
  - pwd
 
 branches:
@@ -21,8 +21,8 @@ after_success:
   - pwd
   - ls -al
   - mkdir codedeploy_artifact
-  - cp bhargavanaman/csye6225-fall2018/infrastructure/aws/codedeploy/*.sh .
-  - cp bhargavanaman/csye6225-fall2018/infrastructure/aws/codedeploy/*.yml .
+  - cp infrastructure/aws/codedeploy/*.sh .
+  - cp infrastructure/aws/codedeploy/*.yml .
   - zip -r csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip webapp/target/cloudassignment2-0.0.1-SNAPSHOT.war *.sh *.yml
   - ls -al
   - mv csye6225-web-app-${TRAVIS_JOB_NUMBER}.zip codedeploy_artifact/
