@@ -2,7 +2,7 @@ version: 0.0
 os: linux
 
 files:             
-  - source: ./webapp/target/cloudassignment2-0.0.1-SNAPSHOT.war
+  - source: ./webapp/target/root.war
     destination: /opt/tomcat/webapps
 
 hooks:
