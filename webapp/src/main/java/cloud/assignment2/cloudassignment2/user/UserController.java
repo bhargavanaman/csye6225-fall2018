@@ -28,6 +28,11 @@ public class UserController {
 	
 	@Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+	@RequestMapping(value="/hello")
+	public String newfunc(){
+		return "hii";
+	}
 	
 	@RequestMapping(value="/user")
 	public List<UserPojo> getAll()
