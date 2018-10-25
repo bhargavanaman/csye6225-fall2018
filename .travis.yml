@@ -57,4 +57,4 @@ deploy:
     secret_access_key: $SECRET_ACCESS_KEY
     wait-until-deployed: true
     on:
-      branch: namanAssignment5s
+      branch: namanAssignment5
