@@ -272,7 +272,7 @@ public class ReceiptControllerDev {
 
 
                                     s3Client.putObject(new PutObjectRequest(bucketName, fileName,
-                                            new File("/home/deepakchandwani/Downloads/"+file.getOriginalFilename()))
+                                            new File("/home/namanbhargava/Downloads/"+file.getOriginalFilename()))
                                             .withCannedAcl(CannedAccessControlList.PublicRead));
 
                                 }
