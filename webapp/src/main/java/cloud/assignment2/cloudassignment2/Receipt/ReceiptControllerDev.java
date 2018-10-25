@@ -129,7 +129,7 @@ public class ReceiptControllerDev {
                               HttpServletRequest req, HttpServletResponse res){
         String clientRegion = "us-east-1";
         String bucketName = "csye6225-fall2018-bhargavan.me";
-        String keyName = "csye6225-assignment6";
+        String keyName = "csye6225-fall2018-assignment3";
         String fileName;
         //get file name wrt receiptId from receipt_pojo
         JsonObject json = new JsonObject();
