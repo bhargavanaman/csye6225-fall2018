@@ -16,7 +16,7 @@ script:
 
 branches:
  only:
-   - dA5
+   - nA5
 after_success:
   - pwd
   - ls -al
@@ -44,7 +44,7 @@ deploy:
     access_key_id: $ACCESS_KEY_ID
     secret_access_key: $SECRET_ACCESS_KEY
     on:
-      branch: dA5
+      branch: nA5
 
   - provider: codedeploy
     access_key_id: $ACCESS_KEY_ID
@@ -57,4 +57,4 @@ deploy:
     secret_access_key: $SECRET_ACCESS_KEY
     wait-until-deployed: true
     on:
-      branch: dA5
+      branch: nA5
