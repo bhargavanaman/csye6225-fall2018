@@ -8,7 +8,6 @@ install: true
 script:
  - pwd
  - cd webapp
- - mvn clean
  - mvn install
  - mvn package
  - ls -al
