@@ -43,7 +43,7 @@ echo "Fetching VPC details"
 VPC_ID=$(aws ec2 describe-vpcs --query Vpcs[0].VpcId --output text)
 
 echo "Fetching domain name from Route 53"
-DOMAIN_NAME="csye6225-fall2018-chandwanid.me"
+DOMAIN_NAME="csye6225-fall2018-bhargavan.me"
 
 PUBLIC_SUBNET=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PublicSubnet`][PhysicalResourceId]' --output text)
 SUBNET_ID_1=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PrivateSubnet1`][PhysicalResourceId]' --output text)
