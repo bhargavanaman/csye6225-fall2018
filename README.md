@@ -11,7 +11,7 @@
 * `Java 8`
 * `IntelliJ`
 
-## Build and Deploy instructions for web application__
+## Build and Deploy instructions for web application
 
 * Open code in IntelliJ
 * Run the springboot code
