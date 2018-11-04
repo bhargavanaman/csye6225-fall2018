@@ -25,6 +25,32 @@
         }]
       }
     },
+    "E2S3Access": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": [
+                "s3:Delete*",
+                "s3:Get*",
+                "s3:Put*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Resource": [{
+                "Ref": "WEBAPPARN"
+              }]
+            }
+          ]
+        },
+        "ManagedPolicyName": "E2S3Access",
+        "Roles": [{
+          "Ref": "CodeDeployEC2ServiceRole"
+        }]
+      }
+    },
     "TravisUploadToS3": {
       "Type": "AWS::IAM::ManagedPolicy",
       "Properties": {
@@ -47,7 +73,7 @@
           "travis"
         ]
       }
-    },
+    },	
     "TravisCodeDeploy": {
       "Type": "AWS::IAM::ManagedPolicy",
       "Properties": {
