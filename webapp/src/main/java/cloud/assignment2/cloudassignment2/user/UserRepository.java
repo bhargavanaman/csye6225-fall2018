@@ -4,4 +4,5 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface UserRepository extends CrudRepository<UserPojo, String> {
 
+    UserPojo findUserPojoByEmail(String email);
 }

@@ -7,7 +7,10 @@ import java.util.StringTokenizer;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
+import com.amazonaws.services.sns.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,6 +31,9 @@ public class UserController {
 	
 	@Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+
+	@Autowired
+	private UserRepository userRepo;
 
 	@RequestMapping(value="/hello")
 	public String newfunc(){
@@ -86,6 +92,36 @@ public class UserController {
 		JsonObject jsonObject = new JsonObject();
 		jsonObject.addProperty("message", "User already exists");
 		return jsonObject.toString();
+	}
+
+	@RequestMapping(value="/user/resetPwd" , method=RequestMethod.POST)
+		public String resetPassword(@RequestBody UserPojo userPojo){
+
+			JsonObject jsonObject = new JsonObject();
+			String email = userPojo.getEmail();
+			UserPojo up = userRepo.findUserPojoByEmail(email);
+			if(up != null)
+			{
+				AmazonSNS snsClient = AmazonSNSAsyncClientBuilder.standard()
+										.withCredentials(new InstanceProfileCredentialsProvider(false))
+										.build();
+				List<Topic> topics = snsClient.listTopics().getTopics();
+
+				for(Topic topic: topics)
+				{
+					if(topic.getTopicArn().endsWith("--------")){
+						PublishRequest req = new PublishRequest(topic.getTopicArn(),userPojo.getEmail());
+						snsClient.publish(req);
+						break;
+					}
+				}
+				jsonObject.addProperty("message","email sent to addr");
+
+			}
+			else{
+				jsonObject.addProperty("message","User not found");
+			}
+			return jsonObject.toString();
 	}
 	
 }
