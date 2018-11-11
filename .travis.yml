@@ -56,3 +56,7 @@ deploy:
     wait-until-deployed: true
     on:
       all_branches: true
+<<<<<<< HEAD
+=======
+
+>>>>>>> 34a9e1e4993ab6566b57b35f2ef294361c284917

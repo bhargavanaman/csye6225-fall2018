@@ -84,6 +84,10 @@ STACKDETAILS=$(aws cloudformation describe-stacks --stack-name $1-application --
 echo "Application stack creation complete"
 echo "Application Stack id: $STACKDETAILS"
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 34a9e1e4993ab6566b57b35f2ef294361c284917
 LAMBDABUCKET="lambda.$DOMAIN_NAME"
 echo "LAMBDA_BUCKET:- $LAMBDABUCKET"
 
@@ -97,4 +101,8 @@ aws cloudformation create-stack --stack-name $1-serverless --capabilities "CAPAB
 aws cloudformation wait stack-create-complete --stack-name $1-serverless
 STACKDETAILS=$(aws cloudformation describe-stacks --stack-name $1-serverless --query Stacks[0].StackId --output text)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 34a9e1e4993ab6566b57b35f2ef294361c284917
 exit 0
