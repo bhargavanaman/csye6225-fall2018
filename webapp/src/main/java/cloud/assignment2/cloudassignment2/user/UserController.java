@@ -8,6 +8,7 @@ import java.util.StringTokenizer;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cloud.assignment2.cloudassignment2.Expense.ExpenseController;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatch;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
@@ -17,6 +18,8 @@ import com.amazonaws.services.sns.AmazonSNSAsyncClientBuilder;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.Topic;
 import com.timgroup.statsd.StatsDClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,6 +48,8 @@ public class UserController {
 	@Autowired
 	private StatsDClient statsDClient;
 
+	private final static Logger logger= LoggerFactory.getLogger(ExpenseController.class);
+
 	@RequestMapping(value="/hello")
 	public String newfunc(){
 		return "hii";
@@ -54,6 +59,7 @@ public class UserController {
 	public List<UserPojo> getAll()
 	{
 		statsDClient.incrementCounter("_GetAllUser_API_");
+		logger.info("Inside_GetAllUser_API_");
 		return userdao.getAll();
 	}
 	
@@ -61,6 +67,7 @@ public class UserController {
 	public String authUser(HttpServletRequest request, HttpServletResponse response) {
 
 		statsDClient.incrementCounter("_UserLoggedinStatusCheck_API_");
+		logger.info("Inside_UserLoggedinStatusCheck_API_");
 
 		String authHeader = request.getHeader("Authorization");
 		JsonObject jsonObject = new JsonObject();
@@ -94,6 +101,7 @@ public class UserController {
 
 		//statsDClient.incrementCounter("endpoint.homepage.http.post");
 		statsDClient.incrementCounter("_RegisterUser_API_");
+		logger.info("Inside_RegisterUser_API_");
 
 		if((userdao.checkUser(userpojo.getEmail()) == null)){
 			UserPojo up = new UserPojo();
@@ -118,6 +126,7 @@ public class UserController {
 	public String resetPassword(@RequestBody UserPojo userPojo){
 
 		statsDClient.incrementCounter("_ResetPassword_API_");
+		logger.info("Inside_ResetPassword_API_");
 		JsonObject jsonObject = new JsonObject();
 		String email = userPojo.getEmail();
 		UserPojo up = userRepo.findUserPojoByEmail(email);

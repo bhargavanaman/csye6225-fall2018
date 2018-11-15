@@ -24,10 +24,7 @@
                 "s3:*",
                 "s3:List*"
             ],
-            "Resource": [
-                "arn:aws:s3:::csye6225-fall2018-chandwanid.me",
-                "arn:aws:s3:::*/*"
-            ]
+            "Resource": [{"Ref" : "BUCKETARN"}]
         }
           ]
         },
@@ -360,6 +357,9 @@
       "Type": "String"
     },
     "LOGROLEPOLICYNAME": {
+      "Type": "String"
+    },
+    "BUCKETARN": {
       "Type": "String"
     }
   }

@@ -43,12 +43,11 @@ echo "Creating application stack"
 echo "Fetching VPC details"
 VPC_ID=$(aws ec2 describe-vpcs --query Vpcs[0].VpcId --output text)
 
-echo "Fetching domain name from Route 53"
+
 echo "Fetching domain name from Route 53"
 DOMAIN_NAME=$(aws route53 list-hosted-zones --query HostedZones[0].Name --output text)
 DOMAIN_NAME="${DOMAIN_NAME%?}"
 echo "$DOMAIN_NAME"
-#DOMAIN_NAME="csye6225-fall2018-bhargavan.me"
 
 PUBLIC_SUBNET=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PublicSubnet`][PhysicalResourceId]' --output text)
 SUBNET_ID_1=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PrivateSubnet1`][PhysicalResourceId]' --output text)
@@ -65,8 +64,11 @@ DBPassword=masteruserpassword
 CD_DOMAIN="code-deploy."${DOMAIN_NAME}
 WEBAPP_DOMAIN="web-app."${DOMAIN_NAME}
 
+BUCKETARN="arn:aws:s3:::"${DOMAIN_NAME}
+echo "BUCKETARN is "$BUCKETARN
+
 echo "Starting cicd"
-RC=$(aws cloudformation create-stack --stack-name $1-ci-cd --capabilities "CAPABILITY_NAMED_IAM" --template-body file://./csye6225-cf-ci-cd.json --parameters ParameterKey=CDARN,ParameterValue=arn:aws:s3:::$CD_DOMAIN/* ParameterKey=WEBAPPARN,ParameterValue=arn:aws:s3:::$WEBAPP_DOMAIN/* ParameterKey=CDAPPNAME,ParameterValue=CSYE6225 ParameterKey=CDOMAIN,ParameterValue=$CD_DOMAIN ParameterKey=LAMBDAUSERROLE,ParameterValue=LambdaExecutionRole ParameterKey=LOGROLEPOLICYNAME,ParameterValue=LogRolePolicy)
+RC=$(aws cloudformation create-stack --stack-name $1-ci-cd --capabilities "CAPABILITY_NAMED_IAM" --template-body file://./csye6225-cf-ci-cd.json --parameters ParameterKey=CDARN,ParameterValue=arn:aws:s3:::$CD_DOMAIN/* ParameterKey=WEBAPPARN,ParameterValue=arn:aws:s3:::$WEBAPP_DOMAIN/* ParameterKey=CDAPPNAME,ParameterValue=CSYE6225 ParameterKey=CDOMAIN,ParameterValue=$CD_DOMAIN ParameterKey=LAMBDAUSERROLE,ParameterValue=LambdaExecutionRole ParameterKey=LOGROLEPOLICYNAME,ParameterValue=LogRolePolicy ParameterKey=BUCKETARN,ParameterValue=$BUCKETARN)
 
 echo "CI stack creation in progress. Please wait"
 aws cloudformation wait stack-create-complete --stack-name $1-ci-cd

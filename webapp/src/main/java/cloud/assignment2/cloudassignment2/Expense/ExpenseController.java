@@ -38,7 +38,7 @@ public class ExpenseController {
         String authHeader = req.getHeader("Authorization");
         if (authHeader==null){
             List<ExpensePojo> newpojo1 = new ArrayList<ExpensePojo>();
-            logger.info("Getting expense");
+            logger.info("Inside_GetAllTransactions_API_");
             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return newpojo1;
         }
@@ -63,6 +63,7 @@ public class ExpenseController {
 
 
         statsDClient.incrementCounter("_AddTransaction_API_");
+        logger.info("Inside_AddTransaction_API_");
         JsonObject json = new JsonObject();
         if(!expensePojo.getAmount().isEmpty()) {
             String authHeader = req.getHeader("Authorization");
@@ -105,6 +106,7 @@ public class ExpenseController {
 
 
         statsDClient.incrementCounter("_DeleteTransaction_API_");
+        logger.info("_DeleteTransaction_API_");
         JsonObject json = new JsonObject();
         String header = req.getHeader("Authorization");
         if(header != null){
@@ -156,6 +158,7 @@ public class ExpenseController {
 
 
         statsDClient.incrementCounter("_UpdateTransaction_API_");
+        logger.info("Inside_UpdateTransaction_API_");
         JsonObject json = new JsonObject();
 
         String header = req.getHeader("Authorization");

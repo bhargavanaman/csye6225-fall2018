@@ -1,5 +1,6 @@
 package cloud.assignment2.cloudassignment2.Receipt;
 
+import cloud.assignment2.cloudassignment2.Expense.ExpenseController;
 import cloud.assignment2.cloudassignment2.Expense.ExpensePojo;
 import cloud.assignment2.cloudassignment2.Expense.ExpenseRepository;
 import cloud.assignment2.cloudassignment2.user.UserDao;
@@ -7,6 +8,8 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.timgroup.statsd.StatsDClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
@@ -55,6 +58,8 @@ public class ReceiptControllerDev {
     @Autowired
     private StatsDClient statsDClient;
 
+    private final static Logger logger= LoggerFactory.getLogger(ExpenseController.class);
+
     //@Value("${app.profile.name}")
       //      private String profileName;
 
@@ -66,6 +71,7 @@ public class ReceiptControllerDev {
                                 HttpServletResponse res){
 
         statsDClient.incrementCounter("_UploadReceipt_API_");
+        logger.info("Inside_UploadReceipt_API_");
         System.out.println("DEV Environment");
         JsonObject json = new JsonObject();
 
@@ -166,6 +172,7 @@ public class ReceiptControllerDev {
 
 
         statsDClient.incrementCounter("_DeleteReceipt_API_");
+        logger.info("Inside_DeleteReceipt_API_");
         String keyName;
         //get file name wrt receiptId from receipt_pojo
         JsonObject json = new JsonObject();
@@ -234,6 +241,7 @@ public class ReceiptControllerDev {
 
 
         statsDClient.incrementCounter("_GetAllReceipt_API_");
+        logger.info("Inside_GetAllReceipt_API_");
         JsonObject json = new JsonObject();
         System.out.println("DEV Environment");
         String authHeader = req.getHeader("Authorization");
@@ -286,6 +294,7 @@ public class ReceiptControllerDev {
 
 
         statsDClient.incrementCounter("_UpdateReceipt_API_");
+        logger.info("Inside_UpdateReceipt_API_");
         System.out.println(" DEV Environment");
         JsonObject json = new JsonObject();
         String keyName = transactionId+file.getOriginalFilename();
