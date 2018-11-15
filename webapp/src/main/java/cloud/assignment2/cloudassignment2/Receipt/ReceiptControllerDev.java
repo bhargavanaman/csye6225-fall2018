@@ -59,7 +59,7 @@ public class ReceiptControllerDev {
       //      private String profileName;
 
     String clientRegion = "us-east-1";
-    String bucketName = "csye6225-fall2018-chandwanid.me";
+    String bucketName = "csye6225-fall2018-bhargavan.me";
 
     @RequestMapping(value="/transaction/{id}/attachments" , method = RequestMethod.POST)
     public String uploadReceipt(@PathVariable(value="id") String transactionId, @RequestParam("file") MultipartFile file, HttpServletRequest req,
