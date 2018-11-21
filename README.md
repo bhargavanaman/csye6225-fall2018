@@ -16,5 +16,9 @@
 * Open code in IntelliJ
 * Run the springboot code
 * Use `Postman` to test the endpoints
+<<<<<<< HEAD
 ***
+=======
+
+>>>>>>> 065d58745f2aca497a4be45d0e13ea7db46db5f3
 

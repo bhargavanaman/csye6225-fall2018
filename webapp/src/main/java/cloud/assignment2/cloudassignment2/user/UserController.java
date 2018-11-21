@@ -147,7 +147,7 @@ public class UserController {
 					break;
 				}
 			}
-			jsonObject.addProperty("message","email sent to addr");
+			jsonObject.addProperty("message","Successful");
 
 		}
 		else{

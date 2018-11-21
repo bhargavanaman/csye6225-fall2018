@@ -18,6 +18,13 @@ else
 	exit 0
 fi
 
+echo "Fetching domain name from Route 53"
+DOMAIN_NAME=$(aws route53 list-hosted-zones --query HostedZones[0].Name --output text)
+
+# Emptying the $DOMAIN bucket
+echo "Emptying the bucket"
+RC=$(aws s3 rm s3://${DOMAIN_NAME%?} --recursive)
+
 EC2_ID=$(aws ec2 describe-instances --filter "Name=tag:aws:cloudformation:stack-name,Values=$1-application" "Name=instance-state-code,Values=16" --query 'Reservations[*].Instances[*].{id:InstanceId}' --output text)
 
 # Command to disable Termination Protection, It will disable it on a specific Instance, hence the instance Id is required

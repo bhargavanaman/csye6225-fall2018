@@ -1,4 +1,3 @@
-#!/bin/bash
 
 if [ -z "$1" ]
 then
@@ -48,27 +47,37 @@ echo "Fetching domain name from Route 53"
 DOMAIN_NAME=$(aws route53 list-hosted-zones --query HostedZones[0].Name --output text)
 DOMAIN_NAME="${DOMAIN_NAME%?}"
 echo "$DOMAIN_NAME"
+APP_DOMAIN_NAME="web-app."${DOMAIN_NAME%?}
 
 PUBLIC_SUBNET=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PublicSubnet`][PhysicalResourceId]' --output text)
+PUBLIC_SUBNET2=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PublicSubnet2`][PhysicalResourceId]' --output text)
 SUBNET_ID_1=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PrivateSubnet1`][PhysicalResourceId]' --output text)
 SUBNET_ID_2=$(aws cloudformation list-stack-resources --stack-name $1-networking --query 'StackResourceSummaries[?LogicalResourceId==`PrivateSubnet2`][PhysicalResourceId]' --output text)
 
-SGID=$(aws ec2 describe-security-groups --filters Name=ip-permission.from-port,Values=22 --query 'SecurityGroups[*].{Name:GroupId}[0]' --output text)
+SGID=$(aws ec2 describe-security-groups --filters Name=ip-permission.from-port,Values=8080 --query 'SecurityGroups[*].{Name:GroupId}[0]' --output text)
 
 DBSGID=$(aws ec2 describe-security-groups --filters Name=ip-permission.from-port,Values=3306 --query 'SecurityGroups[*].{Name:GroupId}[0]' --output text)
 echo $DBSGID
 
+LBSG=$(aws ec2 describe-security-groups --filters Name=ip-permission.from-port,Values=443 --query 'SecurityGroups[*].{Name:GroupId}[0]' --output text)
+
+CERTIFICATE=$(aws acm list-certificates --query 'CertificateSummaryList[0].CertificateArn' --output text)
+
+
 DBUser=root
 DBPassword=masteruserpassword
+
+
 
 CD_DOMAIN="code-deploy."${DOMAIN_NAME}
 WEBAPP_DOMAIN="web-app."${DOMAIN_NAME}
 
 BUCKETARN="arn:aws:s3:::"${DOMAIN_NAME}
 echo "BUCKETARN is "$BUCKETARN
+CDAPPNAME="CSYE6225"
 
 echo "Starting cicd"
-RC=$(aws cloudformation create-stack --stack-name $1-ci-cd --capabilities "CAPABILITY_NAMED_IAM" --template-body file://./csye6225-cf-ci-cd.json --parameters ParameterKey=CDARN,ParameterValue=arn:aws:s3:::$CD_DOMAIN/* ParameterKey=WEBAPPARN,ParameterValue=arn:aws:s3:::$WEBAPP_DOMAIN/* ParameterKey=CDAPPNAME,ParameterValue=CSYE6225 ParameterKey=CDOMAIN,ParameterValue=$CD_DOMAIN ParameterKey=LAMBDAUSERROLE,ParameterValue=LambdaExecutionRole ParameterKey=LOGROLEPOLICYNAME,ParameterValue=LogRolePolicy ParameterKey=BUCKETARN,ParameterValue=$BUCKETARN)
+RC=$(aws cloudformation create-stack --stack-name $1-ci-cd --capabilities "CAPABILITY_NAMED_IAM" --template-body file://./csye6225-cf-ci-cd.json --parameters ParameterKey=CDARN,ParameterValue=arn:aws:s3:::$CD_DOMAIN/* ParameterKey=WEBAPPARN,ParameterValue=arn:aws:s3:::$WEBAPP_DOMAIN/* ParameterKey=CDOMAIN,ParameterValue=$CD_DOMAIN ParameterKey=CDAPPNAME,ParameterValue=$CDAPPNAME ParameterKey=LAMBDAUSERROLE,ParameterValue=LambdaExecutionRole ParameterKey=LOGROLEPOLICYNAME,ParameterValue=LogRolePolicy ParameterKey=BUCKETARN,ParameterValue=$BUCKETARN)
 
 echo "CI stack creation in progress. Please wait"
 aws cloudformation wait stack-create-complete --stack-name $1-ci-cd
@@ -76,9 +85,10 @@ STACKDETAILS=$(aws cloudformation describe-stacks --stack-name $1-ci-cd --query 
 echo "CI stack creation complete"
 echo "CI Stack id: $STACKDETAILS"
 
+echo "Fetching CodeDeployServiceRole Arn"
+CDSR_ARN=$(aws iam get-role --role-name CodeDeployServiceRole --query Role.Arn --output text)
 
-
-aws cloudformation create-stack --stack-name $1-application --template-body file://./csye6225-cf-application.json --parameters ParameterKey=PUBLICSUBNETID,ParameterValue=$PUBLIC_SUBNET ParameterKey=SUBNETID1,ParameterValue=$SUBNET_ID_1 ParameterKey=SUBNETID2,ParameterValue=$SUBNET_ID_2 ParameterKey=DOMAIN,ParameterValue=$DOMAIN_NAME ParameterKey=SGID,ParameterValue=$SGID ParameterKey=DBSGID,ParameterValue=$DBSGID ParameterKey=DBUser,ParameterValue=$DBUser ParameterKey=DBPassword,ParameterValue=$DBPassword
+aws cloudformation create-stack --stack-name $1-application --template-body file://./csye6225-cf-auto-scaling-application.json --parameters ParameterKey=VPCID,ParameterValue=$VPC_ID ParameterKey=PUBLICSUBNETID,ParameterValue=$PUBLIC_SUBNET ParameterKey=PUBLICSUBNETID2,ParameterValue=$PUBLIC_SUBNET2 ParameterKey=SUBNETID1,ParameterValue=$SUBNET_ID_1 ParameterKey=SUBNETID2,ParameterValue=$SUBNET_ID_2 ParameterKey=DOMAIN,ParameterValue=$DOMAIN_NAME ParameterKey=APPDOMAIN,ParameterValue=$APP_DOMAIN_NAME ParameterKey=SGID,ParameterValue=$SGID ParameterKey=LBSG,ParameterValue=$LBSG ParameterKey=CERTIFICATE,ParameterValue=$CERTIFICATE ParameterKey=DBSGID,ParameterValue=$DBSGID ParameterKey=DBUser,ParameterValue=$DBUser ParameterKey=CDAPPNAME,ParameterValue=$CDAPPNAME ParameterKey=DBPassword,ParameterValue=$DBPassword ParameterKey=CDSRARN,ParameterValue=$CDSR_ARN 
 
 
 aws cloudformation wait stack-create-complete --stack-name $1-application

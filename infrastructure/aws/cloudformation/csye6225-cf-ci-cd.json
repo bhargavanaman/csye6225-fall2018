@@ -24,7 +24,8 @@
                 "s3:*",
                 "s3:List*"
             ],
-            "Resource": [{"Ref" : "BUCKETARN"}]
+            "Resource": [{"Ref" : "BUCKETARN"},
+                "arn:aws:s3:::*/*"]
         }
           ]
         },
@@ -261,36 +262,6 @@
       "Properties": {
         "BucketName": {
           "Ref": "CDOMAIN"
-        }
-      }
-    },
-    "CodeDeployApp": {
-      "Type": "AWS::CodeDeploy::Application",
-      "Properties": {
-        "ApplicationName": {
-          "Ref": "CDAPPNAME"
-        }
-      }
-    },
-    "CodeDeployGroup": {
-      "Type": "AWS::CodeDeploy::DeploymentGroup",
-      "Properties": {
-        "ApplicationName": {
-          "Ref": "CDAPPNAME"
-        },
-        "DeploymentGroupName": "CSYE6225-CodeDeploymentGroup",
-        "Ec2TagFilters": [
-          {
-            "Key": "Name",
-            "Type": "KEY_AND_VALUE",
-            "Value": "MyEC2Instance"
-          }
-        ],
-        "ServiceRoleArn": {
-          "Fn::GetAtt": [
-            "CodeDeployServiceRole",
-            "Arn"
-          ]
         }
       }
     },

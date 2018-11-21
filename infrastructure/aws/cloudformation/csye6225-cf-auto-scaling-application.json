@@ -1,0 +1,601 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "DynamoDB": {
+
+      "Type": "AWS::DynamoDB::Table",
+
+      "Properties": {
+
+        "AttributeDefinitions": [
+
+          {
+
+            "AttributeName": "id",
+
+            "AttributeType": "S"
+
+          }
+
+        ],
+
+        "KeySchema": [
+
+          {
+
+            "AttributeName": "id",
+
+            "KeyType": "HASH"
+
+          }
+
+        ],
+
+        "ProvisionedThroughput": {
+
+          "ReadCapacityUnits": "5",
+
+          "WriteCapacityUnits": "5"
+
+        },
+
+        "TableName": "csye6225",
+
+	   "TimeToLiveSpecification": {
+               "AttributeName": "passwordTokenExpiry",
+               "Enabled": "true"
+        }
+
+      }
+
+    },
+
+    "DBSubnetGroup": {
+
+      "Type": "AWS::RDS::DBSubnetGroup",
+
+      "Properties": {
+
+        "DBSubnetGroupDescription": "My Subnet Group",
+
+        "SubnetIds": [
+
+          {
+
+            "Ref": "SUBNETID1"
+
+          },
+
+          {
+
+            "Ref": "SUBNETID2"
+
+          }
+
+        ]
+
+      }
+
+    },
+
+    "DBInstance": {
+
+      "Type": "AWS::RDS::DBInstance",
+
+      "Properties": {
+
+        "DBName": "cloud",
+
+        "Engine": "mysql",
+
+        "EngineVersion": "5.6.37",
+
+        "MultiAZ": "false",
+
+        "PubliclyAccessible": "false",
+
+        "StorageType": "gp2",
+
+        "MasterUsername": "root",
+
+        "DBInstanceClass": "db.t2.medium",
+
+        "DBInstanceIdentifier": "csye6225-fall2018",
+
+        "AllocatedStorage": "10",
+
+        "DBSubnetGroupName": {
+
+          "Ref": "DBSubnetGroup"
+
+        },
+
+        "MasterUserPassword": "masteruserpassword",
+
+        "VPCSecurityGroups": [{"Ref": "DBSGID"}]
+
+      }
+
+    },
+
+    "AutoScalingConfig": {
+
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+
+      "Properties": {
+		
+        "ImageId": "ami-9887c6e7",
+
+	"AssociatePublicIpAddress": "true",
+		
+        "InstanceType": "t2.micro",
+        "BlockDeviceMappings": [{
+		"DeviceName": "/dev/sdf",
+		"Ebs": {
+			"VolumeSize": "20",
+			"VolumeType": "gp2"
+		}
+	}],
+
+        "KeyName": "csye6225-assignment6",
+
+        "SecurityGroups": [{"Ref": "SGID"}],
+
+        "UserData": {
+
+          "Fn::Base64": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/bin/bash -xe ", 
+				"sudo su",
+				"yum install ruby ntp wget java-1.8.0-openjdk-devel -y",
+				"wget https://aws-codedeploy-us-east-1.s3.amazonaws.com/latest/install \n",
+				"chmod +x ./install \n",
+				"./install auto \n",
+				"service codedeploy-agent start \n",
+                                "systemctl start ntpd",
+                                "systemctl enable ntpd",
+                                "groupadd tomcat",
+                                "useradd -M -s /bin/nologin -g tomcat -d /opt/tomcat tomcat",
+                                "cd /tmp",
+                                "wget http://apache.mirrors.pair.com/tomcat/tomcat-8/v8.5.34/bin/apache-tomcat-8.5.34.tar.gz",
+                                "mkdir /opt/tomcat",
+                                "tar xvf apache-tomcat-8*tar.gz -C /opt/tomcat --strip-components=1",
+                                "cd /opt/tomcat",
+                                "chgrp -R tomcat /opt/tomcat",
+                                "chmod -R g+r conf",
+                                "chmod g+x conf",
+                                "chown -R tomcat webapps/ work/ temp/ logs/",
+                                "cd /usr/lib/systemd/system",
+                                "touch tomcat.service",
+                                "echo '[Unit]' > tomcat.service",
+                                "echo 'Description=Apache Tomcat Web Application Container' >> tomcat.service",
+                                "echo 'After=syslog.target network.target' >> tomcat.service",
+                                "echo '[Service]' >> tomcat.service",
+                                "echo 'Type=forking' >> tomcat.service",
+                                "echo 'Environment=JAVA_HOME=/usr/lib/jvm/jre' >> tomcat.service",
+                                "echo 'Environment=CATALINA_PID=/opt/tomcat/temp/tomcat.pid' >> tomcat.service",
+                                "echo 'Environment=CATALINA_HOME=/opt/tomcat' >> tomcat.service",
+                                "echo 'Environment=CATALINA_BASE=/opt/tomcat' >> tomcat.service",
+                                "echo 'Environment=\"CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC\"' >> tomcat.service",
+                                "echo 'Environment=\"JAVA_OPTS=-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom\"' >> tomcat.service",
+                                "echo 'ExecStart=/opt/tomcat/bin/startup.sh' >> tomcat.service",
+                                "echo 'ExecStop=/bin/kill -15 $MAINPID' >> tomcat.service",
+                                "echo 'User=tomcat' >> tomcat.service",
+                                "echo 'Group=tomcat' >> tomcat.service",
+                                "echo 'UMask=0007' >> tomcat.service",
+                                "echo 'RestartSec=10' >> tomcat.service",
+                                "echo 'Restart=always' >> tomcat.service",
+                                "echo '[Install]' >> tomcat.service",
+                                "echo 'WantedBy=multi-user.target' >> tomcat.service",
+                                "systemctl daemon-reload",
+                                "#systemctl start cloudwatch.service",
+                                "#systemctl enable cloudwatch.service",
+                                "systemctl enable tomcat.service",
+                                "systemctl start tomcat.service",
+				"echo '#!/bin/sh' >> /opt/tomcat/bin/setenv.sh \n",	
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.profiles.active=dev\"' >> /opt/tomcat/bin/setenv.sh\n"
+				},
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.url=jdbc:mysql://${DBInstance.Endpoint.Address}:3306/cloud\"' >> /opt/tomcat/bin/setenv.sh\n"
+				},
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.username=${DBUser}\"' >> /opt/tomcat/bin/setenv.sh\n"
+				},
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dspring.datasource.password=${DBPassword}\"' >> /opt/tomcat/bin/setenv.sh\n"
+				},
+				{
+                  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Dbucket.name=${APPDOMAIN}\"' >> /usr/share/tomcat8/bin/setenv.sh\n"
+                },
+				{
+				  "Fn::Sub": "echo 'JAVA_OPTS=\"$JAVA_OPTS -Ddomain.name=${DOMAIN}\"' >> /opt/tomcat/bin/setenv.sh\n"
+				},
+				"chmod +x /opt/tomcat/bin/setenv.sh\n",
+				"#systemctl daemon-reload\n",
+				"echo # Download Agent",
+				"wget https://s3.amazonaws.com/amazoncloudwatch-agent/centos/amd64/latest/amazon-cloudwatch-agent.rpm",
+				"echo # Install Package",
+				"rpm -U ./amazon-cloudwatch-agent.rpm",
+				"systemctl enable tomcat.service\n",
+                                "systemctl start tomcat.service\n"
+                            ]
+                        ]
+                    }
+
+        },
+
+        "IamInstanceProfile": "CodeDeployServiceRoleInstanceProfile"
+
+      }
+
+    },
+
+    "MyAutoScalingGroup": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "Properties": {
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "PUBLICSUBNETID"
+          },
+          {
+            "Ref": "PUBLICSUBNETID2"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "AutoScalingConfig"
+        },
+        "TargetGroupARNs": [
+          {
+            "Ref": "ALBTargetGroup"
+          }
+        ],
+        "MinSize": "3",
+        "MaxSize": "10",
+        "DesiredCapacity": "3",
+        "Tags": [
+          {
+            "PropagateAtLaunch": true,
+            "Key": "Name",
+            "Value": "CSYE_6225_AutoScaling"
+          }
+        ]
+      }
+    },
+    "WebServerScaleUpPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "MyAutoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "1"
+      }
+    },
+    "WebServerScaleDownPolicy": {
+      "Type": "AWS::AutoScaling::ScalingPolicy",
+      "Properties": {
+        "AdjustmentType": "ChangeInCapacity",
+        "AutoScalingGroupName": {
+          "Ref": "MyAutoScalingGroup"
+        },
+        "Cooldown": "60",
+        "ScalingAdjustment": "-1"
+      }
+    },
+    "CPUAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Scale-up if CPU > 10% for 10 minutes",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "60",
+        "EvaluationPeriods": "2",
+        "Threshold": "90",
+        "AlarmActions": [
+          {
+            "Ref": "WebServerScaleUpPolicy"
+          }
+        ],
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "MyAutoScalingGroup"
+            }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    },
+    "CPUAlarmLow": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Scale-down if CPU < 70% for 10 minutes",
+        "MetricName": "CPUUtilization",
+        "Namespace": "AWS/EC2",
+        "Statistic": "Average",
+        "Period": "300",
+        "EvaluationPeriods": "2",
+        "Threshold": "70",
+        "AlarmActions": [
+          {
+            "Ref": "WebServerScaleDownPolicy"
+          }
+        ],
+        "Dimensions": [
+          {
+            "Name": "AutoScalingGroupName",
+            "Value": {
+              "Ref": "MyAutoScalingGroup"
+            }
+          }
+        ],
+        "ComparisonOperator": "LessThanThreshold"
+      }
+    },
+	
+	"LoadBalancer": {
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+      "Properties": {
+        "Name": "load-balancer-1",
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Ref": "LBSG"
+          }
+        ],
+        "Subnets": [
+          {
+            "Ref": "PUBLICSUBNETID"
+          },
+          {
+            "Ref": "PUBLICSUBNETID2"
+          }
+        ],
+        "Type": "application",
+        "IpAddressType": "ipv4",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "CSYE_6225_AutoScaling"
+          }
+        ]
+      }
+    },
+    "Listener": {
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+      "Properties": {
+        "Certificates": [
+          {
+            "CertificateArn": {
+              "Ref": "CERTIFICATE"
+            }
+          }
+        ],
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "ALBTargetGroup"
+            },
+            "Type": "forward"
+          }
+        ],
+        "LoadBalancerArn": {
+          "Ref": "LoadBalancer"
+        },
+        "Port": "443",
+        "Protocol": "HTTPS"
+      }
+    },
+    "ALBTargetGroup": {
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+      "Properties": {
+        "Name": "LBTarget",
+        "Port": "8080",
+        "HealthCheckPort": "8080",
+        "Matcher": {
+          "HttpCode": "401,200"
+        },
+        "HealthCheckIntervalSeconds": 30,
+        "HealthCheckTimeoutSeconds": 5,
+        "HealthyThresholdCount": 3,
+        "Protocol": "HTTP",
+        "VpcId": {
+          "Ref": "VPCID"
+        },
+        "TargetGroupAttributes":[
+          {
+              "Value": "600",
+              "Key": "deregistration_delay.timeout_seconds"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "CSYE_6225_AutoScaling"
+          }
+        ]
+      }
+    },
+	"Route53RecordSetA": {
+      "Type": "AWS::Route53::RecordSet",
+      "Properties": {
+        "AliasTarget": {
+          "DNSName": {
+            "Fn::GetAtt": [
+              "LoadBalancer",
+              "DNSName"
+            ]
+          },
+          "EvaluateTargetHealth": "true",
+          "HostedZoneId": {
+            "Fn::GetAtt": [
+              "LoadBalancer",
+              "CanonicalHostedZoneID"
+            ]
+          }
+        },
+        "HostedZoneName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "DOMAIN"
+              },
+              "."
+            ]
+          ]
+        },
+        "Comment": "DNS name for my instance.",
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "DOMAIN"
+              },
+              "."
+            ]
+          ]
+        },
+        "Type": "A"
+      }
+    },
+	
+	  "CodeDeployApp": {
+      "Type": "AWS::CodeDeploy::Application",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "CDAPPNAME"
+        }
+      }
+    },
+    "CodeDeployGroup": {
+      "Type": "AWS::CodeDeploy::DeploymentGroup",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "CDAPPNAME"
+        },
+        "DeploymentGroupName": "CSYE6225-CodeDeploymentGroup",
+        "AutoScalingGroups" : [ { "Ref": "MyAutoScalingGroup" } ],
+        "Ec2TagFilters": [
+          {
+            "Key": "Name",
+            "Type": "KEY_AND_VALUE",
+            "Value": "CSYE_6225_AutoScaling"
+          }
+        ],
+        "ServiceRoleArn": { "Ref": "CDSRARN" }
+      }
+    },
+
+    "myBucket": {
+
+      "Type": "AWS::S3::Bucket",
+
+      "Properties": {
+
+        "BucketName": {
+
+          "Ref": "APPDOMAIN"
+
+        }
+
+      }
+
+    }
+  },
+
+  "Parameters": {
+	"VPCID": {
+      "Type": "String"
+    },
+    "PUBLICSUBNETID":{
+
+      "Type": "String"
+
+    },
+	"PUBLICSUBNETID2": {
+      "Type": "String"
+    },
+
+    "SGID": {
+
+      "Type": "String"
+
+    },
+
+    "DBSGID": {
+
+      "Type": "String"
+
+    },
+
+    "DBUser": {
+
+      "Type": "String"
+
+    },
+
+    "DBPassword": {
+
+      "Type": "String"
+
+    },
+
+    "SUBNETID1": {
+
+      "Description": "The subnet id",
+
+      "Type": "String"
+
+    },
+
+    "SUBNETID2": {
+
+      "Description": "The subnet id",
+
+      "Type": "String"
+
+    },
+
+    "DOMAIN": {
+
+      "Description": "The domain name",
+
+      "Type": "String"
+
+    },
+	
+	"APPDOMAIN": {
+      "Description": "The web app domain name",
+      "Type": "String"
+    },
+	
+	 "LBSG": {
+      "Description": "Load Balancer security group name",
+      "Type": "String"
+    },
+	
+	 "CERTIFICATE": {
+      "Description": "ARN of SSL Certificate",
+      "Type": "String"
+    },
+	
+      "CDAPPNAME": {
+      "Type": "String"
+    },
+	
+      "CDSRARN": {
+      "Type": "String"
+    }
+	
+
+  }
+
+}
