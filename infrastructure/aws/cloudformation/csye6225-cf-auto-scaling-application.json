@@ -252,9 +252,9 @@
             "Ref": "ALBTargetGroup"
           }
         ],
-        "MinSize": "3",
+        "MinSize": "1",
         "MaxSize": "10",
-        "DesiredCapacity": "3",
+        "DesiredCapacity": "1",
         "Tags": [
           {
             "PropagateAtLaunch": true,
