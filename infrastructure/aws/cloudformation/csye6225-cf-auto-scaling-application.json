@@ -126,7 +126,7 @@
 		
         "ImageId": "ami-9887c6e7",
 
-	"AssociatePublicIpAddress": "true",
+	"AssociatePublicIpAddress": true,
 		
         "InstanceType": "t2.micro",
         "BlockDeviceMappings": [{
