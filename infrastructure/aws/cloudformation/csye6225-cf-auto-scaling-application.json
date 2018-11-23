@@ -388,7 +388,7 @@
         "LoadBalancerArn": {
           "Ref": "LoadBalancer"
         },
-        "Port": "443",
+        "Port": "8080",
         "Protocol": "HTTPS"
       }
     },
@@ -402,7 +402,7 @@
           "HttpCode": "401,200"
         },
         "HealthCheckIntervalSeconds": 30,
-        "HealthCheckTimeoutSeconds": 5,
+        "HealthCheckTimeoutSeconds": 25,
         "HealthyThresholdCount": 3,
         "Protocol": "HTTP",
         "VpcId": {
